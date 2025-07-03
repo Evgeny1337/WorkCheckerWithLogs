@@ -97,7 +97,7 @@ def main():
     dispatcher.bot_data['logger_handler'] = logger_handler
     start_h = telegram.ext.CommandHandler("start",start_handler)
     dispatcher.add_handler(start_h)
-    logger.info('Бот запущен...')
+    logger.info('Бот запущен...!')
     updater.start_polling()
 
 
