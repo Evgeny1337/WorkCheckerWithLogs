@@ -81,7 +81,7 @@ def start_handler(update: telegram.Update, context):
     
 
 def main():
-    load_dotenv()
+    load_dotenv(override=True)
     devman_token = environ['DEVMAN_TOKEN']
     tg_token = environ['TG_TOKEN']
     chat_id =  getenv('TG_CHAT_ID', '').strip()
