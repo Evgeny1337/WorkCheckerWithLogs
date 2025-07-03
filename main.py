@@ -5,6 +5,7 @@ from dotenv import load_dotenv, find_dotenv, set_key
 from os import environ, getenv
 import telegram.ext
 import logging
+import traceback
 
 REQUEST_TIMEOUT = 5
 
@@ -29,12 +30,12 @@ class MyLogsHandler(logging.Handler):
         self.chat_id = chat_id
 
 
-def save_chat_id(chat_id: str):
+def save_chat_id(chat_id: str, env_key:str):
     env_path = find_dotenv()
     if not env_path:
         env_path = '/opt/.env'
-    set_key(env_path, 'TG_CHAT_ID', chat_id)
-    environ['TG_CHAT_ID'] = chat_id
+    set_key(env_path, env_key, chat_id)
+    environ[env_key] = chat_id
 
 
 def create_message(name, url, is_negative=False):
@@ -75,30 +76,40 @@ def check_reviews(bot:telegram.Bot, chat_id, devman_token):
 def start_handler(update: telegram.Update, context):
     devman_token = context.bot_data.get('devman_token')
     chat_id = update.effective_chat.id
-    save_chat_id(str(chat_id))
+    save_chat_id(str(chat_id),'TG_CHAT_ID')
     logger_handler = context.bot_data.get('logger_handler')
     logger_handler.set_chatid(chat_id)
     logger.info("В данный чат с id {} будут приходить уведомления о проверке работ".format(chat_id))
     check_reviews(context.bot, chat_id, devman_token)
+
+def set_chat_handler(update:telegram.Update, context):
+    chat_id = update.effective_chat.id
+    save_chat_id(str(chat_id),'TG_LOG_CHAT_ID')
+    logger.info("В данный чат с id {} будут приходить логи работы бота".format(chat_id))
     
 
 def main():
     load_dotenv(override=True)
     devman_token = environ['DEVMAN_TOKEN']
     tg_token = environ['TG_TOKEN']
-    chat_id =  getenv('TG_CHAT_ID', '').strip()
+    logger_chat_id =  getenv('TG_LOG_CHAT_ID', '').strip()
     updater = telegram.ext.Updater(token=tg_token, use_context=True)
-    bot = updater.bot
-    logger_handler = MyLogsHandler(chat_id, bot)
+    logging_bot = telegram.Bot(token=tg_token)
+    logger_handler = MyLogsHandler(logger_chat_id, logging_bot)
     logger.addHandler(logger_handler)
     logger.setLevel(logging.INFO)
     dispatcher = updater.dispatcher
     dispatcher.bot_data['devman_token'] = devman_token
     dispatcher.bot_data['logger_handler'] = logger_handler
-    start_h = telegram.ext.CommandHandler("start",start_handler)
-    dispatcher.add_handler(start_h)
+    dispatcher.add_handler(telegram.ext.CommandHandler("start",start_handler))
+    dispatcher.add_handler(telegram.ext.CommandHandler("set",set_chat_handler))
     logger.info('Бот запущен...!')
-    updater.start_polling()
+    try:
+        while True:
+            updater.start_polling()
+    except:
+        message = traceback.format_exc()
+        logger.warning(message)
 
 
 
