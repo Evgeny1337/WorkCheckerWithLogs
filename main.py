@@ -2,7 +2,7 @@ import requests
 import time
 import telegram
 from dotenv import load_dotenv, find_dotenv, set_key
-from os import environ
+from os import environ, getenv
 import telegram.ext
 import logging
 
@@ -84,7 +84,7 @@ def main():
     load_dotenv()
     devman_token = environ['DEVMAN_TOKEN']
     tg_token = environ['TG_TOKEN']
-    chat_id = environ['TG_CHAT_ID']
+    chat_id =  getenv('TG_CHAT_ID', '').strip()
     updater = telegram.ext.Updater(token=tg_token, use_context=True)
     bot = updater.bot
     logger_handler = MyLogsHandler(chat_id, bot)
