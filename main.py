@@ -30,8 +30,8 @@ class MyLogsHandler(logging.Handler):
 
 
 def save_chat_id(chat_id: str):
-    env_path = find_dotenv()
-    set_key(env_path, 'TG_CHAT_ID', chat_id)
+    # env_path = find_dotenv()
+    # set_key(env_path, 'TG_CHAT_ID', chat_id)
     environ['TG_CHAT_ID'] = chat_id
 
 
